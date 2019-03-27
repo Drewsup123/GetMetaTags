@@ -5,7 +5,12 @@ const urlMetadata = require('url-metadata')
 
 server.post('/',(req,res) => {
     const data = req.body;
-    
+    res.status(200).send("hello")
+})
+
+server.get('/',(req,res) => {
+    const data = req.body;
+    res.status(200).send("hello")
 })
 
 // urlMetadata('http://bit.ly/2ePIrDy').then(
