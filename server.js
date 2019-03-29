@@ -4,6 +4,7 @@ const cors = require("cors");
 const urlMetadata = require("url-metadata");
 const cheerio = require("cheerio");
 const axios = require("axios");
+const rp = require("request-promise");
 
 server.use(express.json());
 server.use(cors());
@@ -38,13 +39,24 @@ server.post("/user-udemy", (req, res) => {
 
   console.log(req.body.url);
 
-  axios.get(req.body.url).then((response) => {
-      res.status(200).send(response.data)
-      console.log(response.data)
-    return response.data
-  }).catch((err)=> {
+
+
+
+rp(req.body.url).then((html)=>{
+    res.status(200).send(html)
+    console.log(html)
+}).catch(err => {
     console.log(err)
-  })
+    res.status(400).send(err)
+})
+
+//   axios.get(req.body.url).then((response) => {
+//       res.status(200).send(response.data)
+//       console.log(response.data)
+//     return response.data
+//   }).catch((err)=> {
+//     console.log(err)
+//   })
 
 
   
