@@ -5,6 +5,7 @@ const urlMetadata = require("url-metadata");
 const cheerio = require("cheerio");
 const axios = require("axios");
 const rp = require("request-promise");
+const pup = require("puppeteer")
 
 server.use(express.json());
 server.use(cors());
@@ -41,13 +42,16 @@ server.post("/user-udemy", (req, res) => {
 
 
 
-
-rp(req.body.url).then((html)=>{
-    res.status(200).send(html)
-    console.log(html)
+pup.launch().then(browser => {
+    return browser.newPage();
+}).then(page => {
+    return page.goto(req.body.url).then( () => {
+        return page.content()
+    });
+}).then(html => {
+    console.log(html);
 }).catch(err => {
-    console.log(err)
-    res.status(400).send(err)
+    console.log(err);
 })
 
 //   axios.get(req.body.url).then((response) => {
