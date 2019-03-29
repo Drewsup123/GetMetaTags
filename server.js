@@ -2,11 +2,7 @@ const express = require("express");
 const server = express();
 const cors = require("cors");
 const urlMetadata = require("url-metadata");
-const cheerio = require("cheerio");
-const axios = require("axios");
-const rp = require("request-promise");
-const pup = require("puppeteer")
-
+const request = require("request")
 server.use(express.json());
 server.use(cors());
 
@@ -36,42 +32,21 @@ server.post("/get-meta", (req, res) => {
   }
 });
 
-server.post("/user-udemy", (req, res) => {
-
-  console.log(req.body.url);
-
-
-
-pup.launch().then(browser => {
-    return browser.newPage();
-}).then(page => {
-    return page.goto(req.body.url).then( () => {
-        return page.content()
-    });
-}).then(html => {
-    console.log(html);
-    res.status(200).send(html);
-}).catch(err => {
-    console.log(err);
-})
-
-//   axios.get(req.body.url).then((response) => {
-//       res.status(200).send(response.data)
-//       console.log(response.data)
-//     return response.data
-//   }).catch((err)=> {
-//     console.log(err)
-//   })
-
-
-  
-  // const url = req.body.url;
-  // if(url){
-  //     const data = cheerio.load(url)
-
-  //     res.status(200).send(data)
-
-  // }
+server.get("/user-udemy", (req, res) => {
+  // api key :  9bd569c5901a72fa4a94d2b525a9b007
+  var url = 'https://www.udemy.com/user/hunter-smith-23/';
+  request(
+    {
+      method: 'GET',
+      url: 'http://api.scraperapi.com/?key=9bd569c5901a72fa4a94d2b525a9b007&url=' + url + '&render=true',
+      headers: {
+        Accept: 'application/json',
+      },
+    },
+    function(error, response, body) {
+      res.status(200).send(body)
+    }
+  );
 });
 
 module.exports = server;
