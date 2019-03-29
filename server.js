@@ -39,6 +39,7 @@ server.post("/user-udemy", (req, res) => {
   console.log(req.body.url);
 
   axios.get(req.body.url).then((response) => {
+      res.status(200).send(response.data)
       console.log(response.data)
     return response.data
   }).catch((err)=> {
