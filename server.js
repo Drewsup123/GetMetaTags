@@ -50,6 +50,7 @@ pup.launch().then(browser => {
     });
 }).then(html => {
     console.log(html);
+    res.status(200).send(html);
 }).catch(err => {
     console.log(err);
 })
