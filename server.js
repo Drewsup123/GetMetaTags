@@ -4,6 +4,7 @@ const cors = require("cors");
 const urlMetadata = require("url-metadata");
 const request = require("request")
 const cheerio = require('cheerio');
+const requestPromise = require("request-promise");
 server.use(express.json());
 server.use(cors());
 
@@ -11,6 +12,10 @@ server.use(cors());
 server.get("/", (req, res) => {
   res.status(200).send("hello");
 });
+
+const F_getMeta = url => {
+    
+}
 
 server.post("/get-meta", (req, res) => {
   const url = req.body.url;
@@ -33,30 +38,51 @@ server.post("/get-meta", (req, res) => {
   }
 });
 
-server.get("/user-udemy", (req, res) => {
+server.get("/user-udemy", async (req, res) => {
   // api key :  9bd569c5901a72fa4a94d2b525a9b007
   var url = 'https://www.udemy.com/user/hunter-smith-23/';
-  let links = [];
-  request(
-    {
-      method: 'GET',
-      url: 'http://api.scraperapi.com/?key=9bd569c5901a72fa4a94d2b525a9b007&url=' + url + '&render=true',
-      headers: {
-        Accept: 'application/json',
+  let links = []; // original array of "/coursename" links
+  let LinksArr = []; //full udemy link with https://www.udemy.com/ parsed in
+  let Final = [];
+
+  await requestPromise(
+      {
+        method: 'GET',
+        url: 'http://api.scraperapi.com/?key=9bd569c5901a72fa4a94d2b525a9b007&url=' + url + '&render=true',
+        headers: {
+          Accept: 'application/json',
+        },
       },
-    },
-    function(error, response, body) {
-      const $ = cheerio.load(body);
-      $('.merchandising-course-card--mask--2-b-d').each(function(i, elm) {
-        links.push($(elm).attr('href'));
-    });
-    let newArray = [];
-    for(let i = 0; i < links.length; i++){
-      newArray.push(`https://www.udemy.com${links[i]}`)
+      function(error, response, body) {
+          const $ = cheerio.load(body); // loads the html body, which should be a string of html content
+          $('.merchandising-course-card--mask--2-b-d').each(function(i, elm) { //go to each class of the <a> of courses. In this case it is '.merchandising....' class
+            links.push($(elm).attr('href')); // push only the href of each element to links array
+          });
+          for(let i = 0; i < links.length; i++){
+            LinksArr.push(`https://www.udemy.com${links[i]}`) // pushes full link to Final array so we can reference it later
+          }
+      }
+  ); //end request()
+  await (async ()=> {
+    for(let i = 0; i < LinksArr.length; i++){
+      console.log(LinksArr[i]);
+      await urlMetadata(LinksArr[i])
+        .then(data => {
+          Final.push({...data})
+          console.log(Final)
+        })
+        .catch(err => {
+          return -1
+        });
+      // console.log("METADATA", metaData)
+      // Final.push({...metaData, url : LinksArr[i]})
+      // console.log("final at ",i,Final)
     }
-    res.status(200).send(newArray)
-    }
-  );
+  })();
+    res.status(200).send(Final);
+  
+  
+
 });
 
 // ```const divList = [...document.querySelectorAll(".profile-course-card--card--sx0Aa")]
