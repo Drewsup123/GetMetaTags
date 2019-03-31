@@ -13,10 +13,6 @@ server.get("/", (req, res) => {
   res.status(200).send("hello");
 });
 
-const F_getMeta = url => {
-    
-}
-
 server.post("/get-meta", (req, res) => {
   const url = req.body.url;
   if (url) {
@@ -38,12 +34,12 @@ server.post("/get-meta", (req, res) => {
   }
 });
 
-server.get("/user-udemy", async (req, res) => {
+server.post("/user-udemy", async (req, res) => { //RUNTIME == 45-55 seconds
   // api key :  9bd569c5901a72fa4a94d2b525a9b007
-  var url = 'https://www.udemy.com/user/hunter-smith-23/';
+  var url = req.body.url; //this will be dynamic
   let links = []; // original array of "/coursename" links
   let LinksArr = []; //full udemy link with https://www.udemy.com/ parsed in
-  let Final = [];
+  let Final = []; //Final array full of metaData from href endpoints
 
   await requestPromise(
       {
@@ -63,9 +59,12 @@ server.get("/user-udemy", async (req, res) => {
           }
       }
   ); //end request()
+  
+  //need to wait for this function to run before sending the res
   await (async ()=> {
     for(let i = 0; i < LinksArr.length; i++){
       console.log(LinksArr[i]);
+      // need to wait for this function as well
       await urlMetadata(LinksArr[i])
         .then(data => {
           Final.push({...data})
@@ -85,17 +84,6 @@ server.get("/user-udemy", async (req, res) => {
 
 });
 
-// ```const divList = [...document.querySelectorAll(".profile-course-card--card--sx0Aa")]
-// for (let i = 0; i<divList.length; i++) {
-//     let courseId = i + 1
-//     let photoUrl = divList[i].lastChild.attributes[0].ownerElement.childNodes[0].childNodes[0].childNodes[0].childNodes[0].currentSrc
-//     let title = divList[i].lastChild.attributes[0].ownerElement.firstChild.children[0].children[0].nextElementSibling.children[0].childNodes[0].innerText
-//     let author = divList[i].lastChild.children[0].childNodes[0].childNodes[1].childNodes[0].childNodes[1].innerText
-//     let rating = divList[i].lastChild.attributes[0].ownerElement.firstChild.children[0].children[0].nextElementSibling.childNodes[1].firstChild.innerText
-//     let courseUrl = divList[i].childNodes[1].childNodes[0].childNodes[0].href
-//     console.log("\n\ncourseId:  ",courseId,"\ntitle:  ",title,"\nauthor:  ",author,"\nudemyRating:  ",rating,"\nphotoUrl:  ",photoUrl,"\ncourseUrl:  ",courseUrl)
-
-// }```
 module.exports = server;
 
 
