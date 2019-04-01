@@ -30,7 +30,7 @@ async function addToUdemyCollection(userId, metaData){//passing in single url ob
     }).then(() => {
         console.log("Added content to the db", )
         db.collection('user').doc(userId).update({ UdemyList: firebase.firestore.FieldValue.arrayUnion(newLink)}).then(() => { 
-            getContentByUserId()
+            console.log("SUCCESS")
         })
     }).catch((err) => {
         console.log("error adding courses to the db", err);
@@ -113,7 +113,7 @@ server.post("/user-udemy", async (req, res) => { //RUNTIME == 45-55 seconds
       await(addToUdemyCollection(userId, Final[i]))
     }
   })();
-  res.status(200).send(Final);
+  res.status(200).send("done");
 });
 
 module.exports = server;
