@@ -8,6 +8,34 @@ const requestPromise = require("request-promise");
 server.use(express.json());
 server.use(cors());
 
+const loadDB = require("./firebaseConfig");
+const firebase = require("firebase");
+
+async function addToUdemyCollection(userId, metaData){//passing in single url object
+    console.log(metaData)
+    let result = await loadDB();
+    let db = result.firestore();
+    let link = metaData.url;
+    let newLink = link.split("//").pop().replace(/[/]/g, "-");
+    console.log('newLink:  ', newLink)
+    const contentRef = db.collection('content-collection');
+
+    contentRef.doc(newLink).set({
+        title: metaData.title,
+        author: metaData.author,
+        photoUrl: metaData.image,
+        description: metaData.description,
+        link: link,
+        UdemyList: firebase.firestore.FieldValue.arrayUnion(userId)
+    }).then(() => {
+        console.log("Added content to the db", )
+        db.collection('user').doc(userId).update({ UdemyList: firebase.firestore.FieldValue.arrayUnion(newLink)}).then(() => { 
+            getContentByUserId()
+        })
+    }).catch((err) => {
+        console.log("error adding courses to the db", err);
+    });
+}
 
 server.get("/", (req, res) => {
   res.status(200).send("hello");
@@ -37,6 +65,7 @@ server.post("/get-meta", (req, res) => {
 server.post("/user-udemy", async (req, res) => { //RUNTIME == 45-55 seconds
   // api key :  9bd569c5901a72fa4a94d2b525a9b007
   var url = req.body.url; //this will be dynamic
+  let userId = req.body.userId;
   let links = []; // original array of "/coursename" links
   let LinksArr = []; //full udemy link with https://www.udemy.com/ parsed in
   let Final = []; //Final array full of metaData from href endpoints
@@ -78,7 +107,13 @@ server.post("/user-udemy", async (req, res) => { //RUNTIME == 45-55 seconds
       // console.log("final at ",i,Final)
     }
   })();
-    res.status(200).send(Final);
+  await(async ()=>{
+    for(let i = 0; i<Final.length; i++){
+      console.log("adding something to the database now :)", i);
+      await(addToUdemyCollection(userId, Final[i]))
+    }
+  })();
+  res.status(200).send(Final);
 });
 
 module.exports = server;
