@@ -26,7 +26,7 @@ async function addToUdemyCollection(userId, metaData){//passing in single url ob
         photoUrl: metaData.image,
         description: metaData.description,
         link: link,
-        UdemyList: firebase.firestore.FieldValue.arrayUnion(userId)
+        UserList: firebase.firestore.FieldValue.arrayUnion(userId)
     }).then(() => {
         console.log("Added content to the db", )
         db.collection('user').doc(userId).update({ UdemyList: firebase.firestore.FieldValue.arrayUnion(newLink)}).then(() => { 
@@ -62,7 +62,7 @@ server.post("/get-meta", (req, res) => {
   }
 });
 
-server.post("/user-udemy", async (req, res) => { //RUNTIME == 45-55 seconds
+server.post("/user-udemy", async (req, res) => { //RUNTIME == 15-30 seconds
   // api key :  9bd569c5901a72fa4a94d2b525a9b007
   var url = req.body.url; //this will be dynamic
   let userId = req.body.userId;
