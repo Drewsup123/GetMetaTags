@@ -8,29 +8,68 @@ const requestPromise = require("request-promise");
 server.use(express.json());
 server.use(cors());
 
+const loadDB = require("./firebaseConfig");
+const firebase = require("firebase");
+
+async function addToUdemyCollection(userId, metaData){//passing in single url object
+    console.log(metaData)
+    let result = await loadDB();
+    let db = result.firestore();
+    let link = metaData.url;
+    let newLink = link.split("//").pop().replace(/[/]/g, "-");
+    console.log('newLink:  ', newLink)
+    const contentRef = db.collection('content-collection');
+
+    contentRef.doc(newLink).set({
+        title: metaData.title,
+        author: metaData.author,
+        photoUrl: metaData.image,
+        description: metaData.description,
+        link: link,
+        UserList: firebase.firestore.FieldValue.arrayUnion(userId)
+    }).then(() => {
+        console.log("Added content to the db", )
+        db.collection('user').doc(userId).update({ UdemyList: firebase.firestore.FieldValue.arrayUnion(newLink)}).then(() => { 
+            console.log("SUCCESS")
+        })
+    }).catch((err) => {
+        console.log("error adding courses to the db", err);
+    });
+}
+
 server.get("/", (req, res) => {
   res.status(200).send("hello");
 });
 
 server.post("/udemy-cat", async (req, res) => {
-  console.log(req.body);
-  let category = req.body;
-  await requestPromise(
-    {
-      method: "GET",
-      url: "https://www.udemy.com/api-2.0/courses/?category=" + category,
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        Authorization:
-          "Basic eFAxZ0FSblRtVTJyYWlvZ1FGQ2JqQXE1dWZhRXRuanpEMWJQMkxBOTpSN21HQ3lrZUdjaVJEbTc0UXNtaGZDMEdzUG1oWjVRTUhEaHlCTGo2UmxvNFJ2dmQ3aWJnYU0ycjZmQWR0S0tlYXJRZFJvNEpPR3JGNEJZRG1TSnRBdVpheUt3Ykw3alRsV1J3NkkxSklFSkM0RVNDSXM3WDUzNlVtRVB1VlA4MA==",
-        "Content-Type": "application/json;charset=utf-8"
-      }
-    },
-    function(error, response, body) {
-      console.log(body)
-      res.status(200).send(body)
-    }
-  );
+  console.log(req.body.category);
+  let categoryArr = req.body.category;
+  let finalArr = [];
+  await (() => {
+  for (let i = 0; i<categoryArr.length; i++){
+    let url =
+        "https://www.udemy.com/api-2.0/courses/?page=1&page_size=2&category=" +
+        category[i];
+      console.log("url:   ", url);
+      await requestPromise(
+        {
+          method: "GET",
+          url: url,
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            Authorization:
+              "Basic eFAxZ0FSblRtVTJyYWlvZ1FGQ2JqQXE1dWZhRXRuanpEMWJQMkxBOTpSN21HQ3lrZUdjaVJEbTc0UXNtaGZDMEdzUG1oWjVRTUhEaHlCTGo2UmxvNFJ2dmQ3aWJnYU0ycjZmQWR0S0tlYXJRZFJvNEpPR3JGNEJZRG1TSnRBdVpheUt3Ykw3alRsV1J3NkkxSklFSkM0RVNDSXM3WDUzNlVtRVB1VlA4MA==",
+            "Content-Type": "application/json;charset=utf-8"
+          }
+        },
+        await function(error, response, body) {
+          // console.log("BODY:  ", body);
+          finalArr.push(body);
+        }
+      );
+}
+  })();
+  res.status(200).send(finalArr) 
 });
 
 server.post("/get-meta", (req, res) => {
@@ -54,10 +93,10 @@ server.post("/get-meta", (req, res) => {
   }
 });
 
-server.post("/user-udemy", async (req, res) => {
-  //RUNTIME == 45-55 seconds
+server.post("/user-udemy", async (req, res) => { //RUNTIME == 15-30 seconds
   // api key :  9bd569c5901a72fa4a94d2b525a9b007
   var url = req.body.url; //this will be dynamic
+  let userId = req.body.userId;
   let links = []; // original array of "/coursename" links
   let LinksArr = []; //full udemy link with https://www.udemy.com/ parsed in
   let Final = []; //Final array full of metaData from href endpoints
@@ -103,7 +142,13 @@ server.post("/user-udemy", async (req, res) => {
       // console.log("final at ",i,Final)
     }
   })();
-  res.status(200).send(Final);
+  await(async ()=>{
+    for(let i = 0; i<Final.length; i++){
+      console.log("adding something to the database now :)", i);
+      await(addToUdemyCollection(userId, Final[i]))
+    }
+  })();
+  res.status(200).send("done");
 });
 
 module.exports = server;
