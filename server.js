@@ -2,15 +2,83 @@ const express = require("express");
 const server = express();
 const cors = require("cors");
 const urlMetadata = require("url-metadata");
-const request = require("request")
-const cheerio = require('cheerio');
+const request = require("request");
+const cheerio = require("cheerio");
 const requestPromise = require("request-promise");
 server.use(express.json());
 server.use(cors());
 
+const loadDB = require("./firebaseConfig");
+const firebase = require("firebase");
+
+async function addToUdemyCollection(userId, metaData){//passing in single url object
+    console.log(metaData)
+    let result = await loadDB();
+    let db = result.firestore();
+    let link = metaData.url;
+    let newLink = link.split("//").pop().replace(/[/]/g, "-");
+    console.log('newLink:  ', newLink)
+    const contentRef = db.collection('content-collection');
+
+    contentRef.doc(newLink).set({
+        title: metaData.title,
+        author: metaData.author,
+        photoUrl: metaData.image,
+        description: metaData.description,
+        link: link,
+        UserList: firebase.firestore.FieldValue.arrayUnion(userId)
+    }).then(() => {
+        console.log("Added content to the db", )
+        db.collection('user').doc(userId).update({ UdemyList: firebase.firestore.FieldValue.arrayUnion(newLink)}).then(() => { 
+            console.log("SUCCESS")
+        })
+    }).catch((err) => {
+        console.log("error adding courses to the db", err);
+    });
+}
 
 server.get("/", (req, res) => {
   res.status(200).send("hello");
+});
+
+server.post("/udemy-cat", async (req, res) => {
+ 
+  console.log(req.body.category);
+  let categoryArr = req.body.category;
+  let finalArr = [];
+  await (async () => {
+  for (let i = 0; i < categoryArr.length; i++){
+    let url =
+        "https://www.udemy.com/api-2.0/courses/?page=1&page_size=3&category=" + categoryArr[i];
+      console.log("url:   ", url);
+      await requestPromise(
+        {
+          method: "GET",
+          url: url,
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            Authorization:
+              process.env.UDEMY_AUTH,
+            "Content-Type": "application/json;charset=utf-8"
+          },
+          json: true
+        },
+        await function(error, response, body) {
+          // console.log("BODY:  ", body);
+          
+          for (let j = 0; j<body.results.length; j++){
+            console.log(`${j}: ${body.results[j]}`)
+            let {title, image_480x270, author, url, price} = body.results[j]
+            url = `https://www.udemy.com${url}`
+            finalArr.push({title,image_480x270, author, url, price});
+          }
+          
+          
+        }
+      );
+}
+  })();
+  res.status(200).send(finalArr) 
 });
 
 server.post("/get-meta", (req, res) => {
@@ -34,56 +102,62 @@ server.post("/get-meta", (req, res) => {
   }
 });
 
-server.post("/user-udemy", async (req, res) => { //RUNTIME == 45-55 seconds
+server.post("/user-udemy", async (req, res) => { //RUNTIME == 15-30 seconds
   // api key :  9bd569c5901a72fa4a94d2b525a9b007
   var url = req.body.url; //this will be dynamic
+  let userId = req.body.userId;
   let links = []; // original array of "/coursename" links
   let LinksArr = []; //full udemy link with https://www.udemy.com/ parsed in
   let Final = []; //Final array full of metaData from href endpoints
 
   await requestPromise(
-      {
-        method: 'GET',
-        url: 'http://api.scraperapi.com/?key=9bd569c5901a72fa4a94d2b525a9b007&url=' + url + '&render=true',
-        headers: {
-          Accept: 'application/json',
-        },
-      },
-      function(error, response, body) {
-          const $ = cheerio.load(body); // loads the html body, which should be a string of html content
-          $('.merchandising-course-card--mask--2-b-d').each(function(i, elm) { //go to each class of the <a> of courses. In this case it is '.merchandising....' class
-            links.push($(elm).attr('href')); // push only the href of each element to links array
-          });
-          for(let i = 0; i < links.length; i++){
-            LinksArr.push(`https://www.udemy.com${links[i]}`) // pushes full link to Final array so we can reference it later
-          }
+    {
+      method: "GET",
+      url:
+        "http://api.scraperapi.com/?key=9bd569c5901a72fa4a94d2b525a9b007&url=" +
+        url +
+        "&render=true",
+      headers: {
+        Accept: "application/json"
       }
+    },
+    function(error, response, body) {
+      const $ = cheerio.load(body); // loads the html body, which should be a string of html content
+      $(".merchandising-course-card--mask--2-b-d").each(function(i, elm) {
+        //go to each class of the <a> of courses. In this case it is '.merchandising....' class
+        links.push($(elm).attr("href")); // push only the href of each element to links array
+      });
+      for (let i = 0; i < links.length; i++) {
+        LinksArr.push(`https://www.udemy.com${links[i]}`); // pushes full link to Final array so we can reference it later
+      }
+    }
   ); //end request()
-  
+
   //need to wait for this function to run before sending the res
-  await (async ()=> {
-    for(let i = 0; i < LinksArr.length; i++){
+  await (async () => {
+    for (let i = 0; i < LinksArr.length; i++) {
       console.log(LinksArr[i]);
       // need to wait for this function as well
       await urlMetadata(LinksArr[i])
         .then(data => {
-          Final.push({...data})
-          console.log(Final)
+          Final.push({ ...data });
+          console.log(Final);
         })
         .catch(err => {
-          return -1
+          return -1;
         });
       // console.log("METADATA", metaData)
       // Final.push({...metaData, url : LinksArr[i]})
       // console.log("final at ",i,Final)
     }
   })();
-    res.status(200).send(Final);
-  
-  
-
+  await(async ()=>{
+    for(let i = 0; i<Final.length; i++){
+      console.log("adding something to the database now :)", i);
+      await(addToUdemyCollection(userId, Final[i]))
+    }
+  })();
+  res.status(200).send("done");
 });
 
 module.exports = server;
-
-
