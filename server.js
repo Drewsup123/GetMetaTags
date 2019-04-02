@@ -42,14 +42,14 @@ server.get("/", (req, res) => {
 });
 
 server.post("/udemy-cat", async (req, res) => {
+ 
   console.log(req.body.category);
   let categoryArr = req.body.category;
   let finalArr = [];
-  await (() => {
-  for (let i = 0; i<categoryArr.length; i++){
+  await (async () => {
+  for (let i = 0; i < categoryArr.length; i++){
     let url =
-        "https://www.udemy.com/api-2.0/courses/?page=1&page_size=2&category=" +
-        category[i];
+        "https://www.udemy.com/api-2.0/courses/?page=1&page_size=3&category=" + categoryArr[i];
       console.log("url:   ", url);
       await requestPromise(
         {
@@ -58,13 +58,22 @@ server.post("/udemy-cat", async (req, res) => {
           headers: {
             Accept: "application/json, text/plain, */*",
             Authorization:
-              "Basic eFAxZ0FSblRtVTJyYWlvZ1FGQ2JqQXE1dWZhRXRuanpEMWJQMkxBOTpSN21HQ3lrZUdjaVJEbTc0UXNtaGZDMEdzUG1oWjVRTUhEaHlCTGo2UmxvNFJ2dmQ3aWJnYU0ycjZmQWR0S0tlYXJRZFJvNEpPR3JGNEJZRG1TSnRBdVpheUt3Ykw3alRsV1J3NkkxSklFSkM0RVNDSXM3WDUzNlVtRVB1VlA4MA==",
+              process.env.UDEMY_AUTH,
             "Content-Type": "application/json;charset=utf-8"
-          }
+          },
+          json: true
         },
         await function(error, response, body) {
           // console.log("BODY:  ", body);
-          finalArr.push(body);
+          
+          for (let j = 0; j<body.results.length; j++){
+            console.log(`${j}: ${body.results[j]}`)
+            let {title, image_480x270, author, url, price} = body.results[j]
+            url = `https://www.udemy.com${url}`
+            finalArr.push({title,image_480x270, author, url, price});
+          }
+          
+          
         }
       );
 }
