@@ -59,7 +59,8 @@ server.post("/udemy-cat", async (req, res) => {
             Accept: "application/json, text/plain, */*",
             Authorization:
               process.env.UDEMY_AUTH,
-            "Content-Type": "application/json;charset=utf-8"
+            "Content-Type": "application/json;charset=utf-8",
+            "Access-Control-Allow-Origin": "*"
           },
           json: true
         },
