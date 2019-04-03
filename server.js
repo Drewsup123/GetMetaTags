@@ -41,7 +41,19 @@ server.get("/", (req, res) => {
   res.status(200).send("hello");
 });
 
-server.post("/udemy-cat", async (req, res) => {
+
+var whitelist = ['http://localhost', 'https://learned-app.now.sh/']
+var corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
+
+server.post("/udemy-cat", cors(corsOptions), async (req, res) => {
  
   console.log(req.body.category);
   let categoryArr = req.body.category;
@@ -60,7 +72,8 @@ server.post("/udemy-cat", async (req, res) => {
             Authorization:
               process.env.UDEMY_AUTH,
             "Content-Type": "application/json;charset=utf-8",
-            "Access-Control-Allow-Origin": "*"
+            "Access-Control-Allow-Origin": "*",
+            
           },
           json: true
         },
