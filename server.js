@@ -58,41 +58,41 @@ server.post("/udemy-cat", cors(corsOptions), async (req, res) => {
   console.log(req.body.category);
   let categoryArr = req.body.category;
   let finalArr = [];
-  await (async () => {
-  for (let i = 0; i < categoryArr.length; i++){
-    let url =
-        "https://www.udemy.com/api-2.0/courses/?page=1&page_size=3&category=" + categoryArr[i];
-      console.log("url:   ", url);
-      await requestPromise(
-        {
-          method: "GET",
-          url: url,
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            Authorization:
-              process.env.UDEMY_AUTH,
+//   await (async () => {
+//   for (let i = 0; i < categoryArr.length; i++){
+//     let url =
+//         "https://www.udemy.com/api-2.0/courses/?page=1&page_size=3&category=" + categoryArr[i];
+//       console.log("url:   ", url);
+//       await requestPromise(
+//         {
+//           method: "GET",
+//           url: url,
+//           headers: {
+//             Accept: "application/json, text/plain, */*",
+//             Authorization:
+//               process.env.UDEMY_AUTH,
             
             
             
-          },
-          json: true
-        },
-        await function(error, response, body) {
-          // console.log("BODY:  ", body);
+//           },
+//           json: true
+//         },
+//         await function(error, response, body) {
+//           // console.log("BODY:  ", body);
           
-          for (let j = 0; j<body.results.length; j++){
-            console.log(`${j}: ${body.results[j]}`)
-            let {title, image_480x270, author, url, price} = body.results[j]
-            url = `https://www.udemy.com${url}`
-            finalArr.push({title,image_480x270, author, url, price});
-          }
+//           for (let j = 0; j<body.results.length; j++){
+//             console.log(`${j}: ${body.results[j]}`)
+//             let {title, image_480x270, author, url, price} = body.results[j]
+//             url = `https://www.udemy.com${url}`
+//             finalArr.push({title,image_480x270, author, url, price});
+//           }
           
           
-        }
-      );
-}
-  })();
-  res.status(200).send(finalArr) 
+//         }
+//       );
+// }
+//   })();
+  res.status(200).send(categoryArr) 
 });
 
 server.post("/get-meta", (req, res) => {
