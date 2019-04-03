@@ -42,7 +42,7 @@ server.get("/", (req, res) => {
 });
 
 
-var whitelist = ['http://localhost', 'https://learned-app.now.sh/']
+var whitelist = ['http://localhost:1738', 'https://learned-app.now.sh/','http://localhost:1738/Homepage']
 var corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
@@ -55,47 +55,45 @@ var corsOptions = {
 
 server.post("/udemy-cat", cors(corsOptions), async (req, res) => {
  
-  console.log(req.body.category);
+  
   let categoryArr = req.body
   let finalArr = [];
-//   await (async () => {
-//   for (let i = 0; i < categoryArr.length; i++){
-//     let url =
-//         "https://www.udemy.com/api-2.0/courses/?page=1&page_size=3&category=" + categoryArr[i];
-//       console.log("url:   ", url);
-//       await requestPromise(
-//         {
-//           method: "GET",
-//           url: url,
-//           headers: {
-//             Accept: "application/json, text/plain, */*",
-//             Authorization:
-//               process.env.UDEMY_AUTH,
-            
-            
-            
-//           },
-//           json: true
-//         },
-//         await function(error, response, body) {
-//           // console.log("BODY:  ", body);
+  console.log(req.body)
+  await (async () => {
+  for (let i = 0; i < categoryArr.length; i++){
+    let url =
+        "https://www.udemy.com/api-2.0/courses/?page=1&page_size=3&category=" + categoryArr[i];
+      console.log("url:   ", url);
+      await requestPromise(
+        {
+          method: "GET",
+          url: url,
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            Authorization:
+              process.env.UDEMY_AUTH,
+          },
+          json: true
+        },
+        await function(error, response, body) {
+          // console.log("BODY:  ", body);
           
-//           for (let j = 0; j<body.results.length; j++){
-//             console.log(`${j}: ${body.results[j]}`)
-//             let {title, image_480x270, author, url, price} = body.results[j]
-//             url = `https://www.udemy.com${url}`
-//             finalArr.push({title,image_480x270, author, url, price});
-//           }
+          for (let j = 0; j<body.results.length; j++){
+            console.log(`${j}: ${body.results[j]}`)
+            let {title, image_480x270, author, url, price} = body.results[j]
+            url = `https://www.udemy.com${url}`
+
+            console.log(j,":  ", title )
+            finalArr.push({title,image_480x270, author, url, price});
+          }
           
           
-//         }
-//       );
-// }
-//   })();
-if(!categoryArr){
-  res.status(500).send("no request")
+        }
+      );
 }
-  res.status(200).send(categoryArr) 
+  })();
+
+  res.status(200).send(finalArr) 
 });
 
 server.post("/get-meta", (req, res) => {
