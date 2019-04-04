@@ -54,7 +54,7 @@ var corsOptions = {
   }
 }
 
-server.post("/udemy-cat", /*cors(corsOptions),*/ async (req, res) => {
+server.post("/udemy-cat", cors(corsOptions), async (req, res) => {
   let categoryArr = req.body.category
   let finalArr = [];
   console.log(req.body)
