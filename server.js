@@ -61,7 +61,7 @@ server.post("/udemy-cat", cors(corsOptions), async (req, res) => {
   await (async () => {
 
     for (const cat of categoryArr){
-      let url = "https://www.udemy.com/api-2.0/courses/?page=1&page_size=3&category=" + cat;
+      let url = "https://www.udemy.com/api-2.0/courses/?page=1&page_size=5&category=" + cat;
         console.log("url:   ", url);
         await requestPromise(
           {
@@ -79,6 +79,7 @@ server.post("/udemy-cat", cors(corsOptions), async (req, res) => {
             console.log("I AM BEING CALLED")
             for (let j = 0; j<body.results.length; j++){
               console.log(`${j}: ${body.results[j]}`)
+              console.log(body.results[j])
               let {title, image_480x270, author, url, price} = body.results[j]
               url = `https://www.udemy.com${url}`
 
