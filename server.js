@@ -41,11 +41,24 @@ server.get("/", (req, res) => {
   res.status(200).send("hello");
 });
 
-server.post("/udemy-cat", async (req, res) => {
+
+var whitelist = ['http://localhost:1738', 'https://learned-app.now.sh/','http://localhost:1738/Homepage']
+var corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
+
+server.post("/udemy-cat", cors(corsOptions), async (req, res) => {
  
-  console.log(req.body.category);
-  let categoryArr = req.body.category;
+  
+  let categoryArr = req.body
   let finalArr = [];
+  console.log(req.body)
   await (async () => {
   for (let i = 0; i < categoryArr.length; i++){
     let url =
@@ -59,8 +72,6 @@ server.post("/udemy-cat", async (req, res) => {
             Accept: "application/json, text/plain, */*",
             Authorization:
               process.env.UDEMY_AUTH,
-            "Content-Type": "application/json;charset=utf-8",
-            "Access-Control-Allow-Origin": "*"
           },
           json: true
         },
@@ -71,6 +82,8 @@ server.post("/udemy-cat", async (req, res) => {
             console.log(`${j}: ${body.results[j]}`)
             let {title, image_480x270, author, url, price} = body.results[j]
             url = `https://www.udemy.com${url}`
+
+            console.log(j,":  ", title )
             finalArr.push({title,image_480x270, author, url, price});
           }
           
@@ -79,6 +92,7 @@ server.post("/udemy-cat", async (req, res) => {
       );
 }
   })();
+
   res.status(200).send(finalArr) 
 });
 
