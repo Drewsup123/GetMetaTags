@@ -174,12 +174,15 @@ server.post("/user-udemy", async (req, res) => { //RUNTIME == 15-30 seconds
   res.status(200).send("done");
 });
 
+// Gets user specified courses by params
 server.post("/get-courses", async (req, res) => {
   // I want search term, category, subcategory, price
   console.log("this is send this", req.body.sendThis)
+  // this will be an object in the form of "parameters" : {"searchTerm":"unreal engine", "category":"Development", "price": "price-paid"}
   const sent = req.body.parameters
   console.log("this is sent", sent)
-  let finalUrl = `https://www.udemy.com/api-2.0/courses/?page=1&page_size=100${sent.searchTerm ? `&search=${sent.searchTerm.replace(/\s+/g, '%20')}` : ""}${sent.category ? `&category=${sent.category}` : ""}${sent.price ? `&price=${sent.price}` : ""}`;
+  // Creates the final Url for Udemy 
+  let finalUrl = `https://www.udemy.com/api-2.0/courses/?page=1&page_size=100${sent.searchTerm ? `&search=${sent.searchTerm.replace(/\s+/g, '%20')}` : ""}${sent.category ? `&category=${sent.category}` : ""}${sent.price ? `&price=${sent.price}` : ""}&ordering=highest-rated`;
   let finalArr = []
   await requestPromise(
     {
@@ -203,7 +206,7 @@ server.post("/get-courses", async (req, res) => {
         console.log(j,":  ", title )
         finalArr.push({title,image_480x270, author, url, price});
       }
-      res.send(finalArr)
+      res.status(200).send(finalArr)
     }
   )
 })
