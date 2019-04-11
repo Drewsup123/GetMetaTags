@@ -174,4 +174,38 @@ server.post("/user-udemy", async (req, res) => { //RUNTIME == 15-30 seconds
   res.status(200).send("done");
 });
 
+server.post("/get-courses", async (req, res) => {
+  // I want search term, category, subcategory, price
+  console.log("this is send this", req.body.sendThis)
+  const sent = req.body.parameters
+  console.log("this is sent", sent)
+  let finalUrl = `https://www.udemy.com/api-2.0/courses/?page=1&page_size=100${sent.searchTerm ? `&search=${sent.searchTerm.replace(/\s+/g, '%20')}` : ""}${sent.category ? `&category=${sent.category}` : ""}${sent.price ? `&price=${sent.price}` : ""}`;
+  let finalArr = []
+  await requestPromise(
+    {
+      method: "GET",
+      url: finalUrl,
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        Authorization:
+          process.env.UDEMY_AUTH,
+      },
+      json: true
+    },
+    await function(error,response, body) {
+      // console.log(body)
+      for (let j = 0; j<body.results.length; j++){
+        // console.log(`${j}: ${body.results[j]}`)
+        // console.log(body.results[j])
+        let {title, image_480x270, author, url, price} = body.results[j]
+        url = `https://www.udemy.com${url}`
+
+        console.log(j,":  ", title )
+        finalArr.push({title,image_480x270, author, url, price});
+      }
+      res.send(finalArr)
+    }
+  )
+})
+
 module.exports = server;
