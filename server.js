@@ -212,26 +212,26 @@ server.post("/get-courses", async (req, res) => {
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////    Image Uploading ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// const cloudinary = require('cloudinary');
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET,
-// });
+const cloudinary = require('cloudinary');
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// server.post('/upload', (req, res) => {
-//   // Upload image
-//   cloudinary.v2.uploader.upload(req.body.img, function(
-//     error,
-//     result
-//   ) {
-//     if (error) {
-//       return res.status(500).send(error);
-//     }
-//     // Send image Url
-//     console.log(result)
-//     res.status(200).send({url : result.url})
-//   });
-// });
+server.post('/upload', (req, res) => {
+  // Upload image
+  cloudinary.v2.uploader.upload(req.body.img, function(
+    error,
+    result
+  ) {
+    if (error) {
+      return res.status(500).send(error);
+    }
+    // Send image Url
+    console.log(result)
+    res.status(200).send({url : result.url})
+  });
+});
 
 module.exports = server;
